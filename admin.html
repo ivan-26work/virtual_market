@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Market - Admin Produits</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin-new.css">
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Header compact -->
+    <header class="admin-header-compact">
+        <div class="header-container">
+            <img src="images/logo.png" alt="Virtual Market" class="logo">
+            <h1>PRODUITS</h1>
+            <button class="btn-ajouter-header" id="btn-ajouter">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Grille des produits (cartes compactes) -->
+    <main class="admin-main">
+        <div id="produits-grid" class="produits-grid-compact">
+            <!-- Les produits seront injectés ici -->
+        </div>
+    </main>
+
+    <!-- Navigation fixe en bas (comme profil-admin) -->
+    <nav class="admin-nav-bottom">
+        <div class="nav-scroll">
+            <a href="admin.html" class="nav-item active">
+                <i class="fas fa-boxes"></i>
+                <span>Produits</span>
+            </a>
+            <a href="produit.html" class="nav-item">
+                <i class="fas fa-store"></i>
+                <span>Catalogue</span>
+            </a>
+            <a href="commandes.html" class="nav-item">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Commandes</span>
+            </a>
+            <a href="livraison.html" class="nav-item">
+                <i class="fas fa-truck"></i>
+                <span>Livraison</span>
+            </a>
+            <a href="parametres.html" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Paramètres</span>
+            </a>
+        </div>
+    </nav>
+<!-- Modal d'ajout/modification produit -->
+<div id="modal-produit" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modal-titre"><i class="fas fa-box"></i> Nouveau produit</h2>
+            <button class="modal-close">&times;</button>
+        </div>
+        
+        <form id="form-produit" class="modal-body">
+            <div class="form-group">
+                <label for="produit-nom">Nom du produit *</label>
+                <input type="text" id="produit-nom" placeholder="Ex: Banane" required>
+            </div>
+
+            <div class="form-group">
+                <label for="produit-categorie">Catégorie *</label>
+                <select id="produit-categorie" required>
+                    <option value="">Sélectionner une catégorie</option>
+                    <option value="Fruits">🍌 Fruits</option>
+                    <option value="Légumes">🥕 Légumes</option>
+                    <option value="Tubercules">🥔 Tubercules</option>
+                    <option value="Céréales">🌽 Céréales</option>
+                    <option value="Épices">🌶️ Épices</option>
+                    <option value="Poisson">🐟 Poisson</option>
+                    <option value="Viande">🥩 Viande</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group half">
+                    <label for="produit-prix">Prix (F.CFA) *</label>
+                    <input type="number" id="produit-prix" placeholder="500" min="0" required>
+                </div>
+                <div class="form-group half">
+                    <label for="produit-stock">Stock (kg) *</label>
+                    <input type="number" id="produit-stock" placeholder="10" min="0" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="produit-description">Description</label>
+                <textarea id="produit-description" rows="3" placeholder="Description du produit..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="produit-image">Image du produit *</label>
+                <input type="file" id="produit-image" accept="image/*">
+                <div id="image-preview" class="image-preview"></div>
+                <small class="field-hint">Format: JPG, PNG (max 5MB)</small>
+            </div>
+        </form>
+
+        <div class="modal-footer">
+            <button class="btn-annuler" id="annuler-produit">Annuler</button>
+            <button class="btn-sauvegarder" id="sauvegarder-produit">
+                <i class="fas fa-save"></i> Créer produit
+            </button>
+        </div>
+    </div>
+</div>
+
+    <!-- Modal de détail produit (overlay scrollable) -->
+    <div id="modal-detail" class="modal-overlay">
+        <div class="modal-content modal-detail-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-info-circle"></i> Détails produit</h2>
+                <button class="modal-close-detail">&times;</button>
+            </div>
+            
+            <div class="modal-body detail-scrollable" id="detail-body">
+                <!-- Le contenu sera injecté par JS -->
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-modifier" id="btn-modifier-produit">
+                    <i class="fas fa-edit"></i> Modifier
+                </button>
+                <button class="btn-supprimer-detail" id="btn-supprimer-produit">
+                    <i class="fas fa-trash"></i> Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template produit compact -->
+    <template id="template-produit">
+        <div class="produit-card-compact" data-produit-id="">
+            <img src="" alt="" class="produit-image" loading="lazy">
+            <div class="produit-info-compact">
+                <h3 class="produit-nom-compact"></h3>
+                <p class="produit-prix-compact"></p>
+            </div>
+        </div>
+    </template>
+
+    <script src="js/supabase.js"></script>
+    <script src="js/admin-new.js"></script>
+</body>
+</html>
