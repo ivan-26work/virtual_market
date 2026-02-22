@@ -74,29 +74,25 @@ function showMessage(message, type = 'error') {
     }
 }
 
-// Valider le format du téléphone ivoirien
+// Valider et formater le numéro ivoirien (+225 suivi de 10 chiffres)
 function validerTelephone(e) {
     let phone = e.target.value.replace(/\s+/g, '');
     
-    // Format auto
-    if (phone.length === 12 && phone.startsWith('+225')) {
-        // +225 XX XX XX XX
-        let formatted = phone.replace(/(\+225)(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
-        e.target.value = formatted;
-    } else if (phone.length === 10 && phone.startsWith('05')) {
-        // 05 XX XX XX XX
-        let formatted = phone.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+    // Format auto pour +225 suivi de 10 chiffres
+    if (phone.length === 14 && phone.startsWith('+225')) {
+        // +225 XX XX XX XX XX
+        let formatted = phone.replace(/(\+225)(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5 $6');
         e.target.value = formatted;
     }
 }
 
-// Valider téléphone avant soumission
+// Vérifier que le numéro est un numéro ivoirien valide
 function estTelephoneValide(phone) {
     const phoneSansEspaces = phone.replace(/\s+/g, '');
-    const regex225 = /^\+225\d{8}$/;
-    const regex05 = /^05\d{8}$/;
+    // +225 suivi de 10 chiffres (peu importe les premiers chiffres : 01, 05, 07, etc.)
+    const regexIvoirien = /^\+225\d{10}$/;
     
-    return regex225.test(phoneSansEspaces) || regex05.test(phoneSansEspaces);
+    return regexIvoirien.test(phoneSansEspaces);
 }
 
 // Gestion de la connexion
@@ -172,8 +168,9 @@ async function handleRegister(e) {
             return;
         }
         
+        // Validation du numéro ivoirien (+225 + 10 chiffres)
         if (!estTelephoneValide(phone)) {
-            showMessage('Format de téléphone invalide. Utilisez +225 XX XX XX XX ou 05 XX XX XX XX');
+            showMessage('Numéro invalide. Format: +225 suivi de 10 chiffres (ex: +225 01 23 45 67 89)');
             registerBtn.disabled = false;
             registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> S\'inscrire';
             return;
@@ -193,7 +190,7 @@ async function handleRegister(e) {
             return;
         }
         
-        // Nettoyer le téléphone pour stockage
+        // Nettoyer le téléphone pour stockage (enlever les espaces)
         const phoneClean = phone.replace(/\s+/g, '');
         
         // Inscription avec Supabase
@@ -205,7 +202,7 @@ async function handleRegister(e) {
                     full_name: name,
                     phone: phoneClean,
                     commune: commune,
-                    avatar_letter: email.charAt(0).toUpperCase()
+                    avatar_letter: name.charAt(0).toUpperCase()
                 }
             }
         });
