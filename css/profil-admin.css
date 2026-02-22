@@ -1,0 +1,403 @@
+/* profil-admin.css - Espace admin */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+    background: #f0f4f8;
+    min-height: 100vh;
+}
+
+/* Header admin */
+.admin-header {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    border-radius: 0 0 30px 30px;
+    padding: 15px 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.btn-retour {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.btn-retour:active {
+    background: rgba(255,255,255,0.3);
+    transform: scale(0.95);
+}
+
+.logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+.admin-email {
+    font-size: 0.9rem;
+    background: rgba(255,255,255,0.15);
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* Navigation scrollable */
+.admin-nav {
+    position: sticky;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    z-index: 90;
+    margin: 0 20px;
+}
+
+.nav-scroll {
+    background: white;
+    border-radius: 50px;
+    padding: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    display: flex;
+    overflow-x: auto;
+    gap: 5px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border: 2px solid rgba(255,255,255,0.5);
+}
+
+.nav-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.nav-item {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #7f8c8d;
+    padding: 8px 16px;
+    border-radius: 40px;
+    transition: all 0.2s;
+    gap: 4px;
+    min-width: 70px;
+}
+
+.nav-item i {
+    font-size: 1.3rem;
+}
+
+.nav-item span {
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.nav-item.active {
+    background: #3498db;
+    color: white;
+}
+
+.nav-item:active {
+    transform: scale(0.95);
+}
+
+/* Contenu principal */
+.admin-main {
+    max-width: 600px;
+    margin: 30px auto 100px;
+    padding: 0 20px;
+}
+
+/* Carte de profil */
+.profil-card {
+    background: white;
+    border-radius: 30px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    animation: slideUp 0.5s ease;
+    border-top: 5px solid #3498db;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Avatar */
+.profil-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    margin: 0 auto 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+    border: 4px solid white;
+}
+
+/* Informations */
+.profil-info {
+    margin-bottom: 30px;
+}
+
+.info-group {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 15px;
+    transition: all 0.2s;
+}
+
+.info-group:hover {
+    transform: translateX(5px);
+    background: #e8f4fc;
+}
+
+.info-group label {
+    display: block;
+    color: #7f8c8d;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-group label i {
+    color: #3498db;
+    margin-right: 8px;
+    width: 18px;
+}
+
+.info-group p {
+    color: #2c3e50;
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding-left: 26px;
+}
+
+.role-badge {
+    background: #3498db;
+    color: white !important;
+    padding: 4px 12px !important;
+    border-radius: 30px;
+    display: inline-block !important;
+    font-size: 0.9rem !important;
+}
+
+/* Bouton déconnexion */
+.btn-deconnexion {
+    width: 100%;
+    padding: 16px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 15px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 0 #c0392b;
+    margin-top: 20px;
+}
+
+.btn-deconnexion:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #c0392b;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 30px;
+    max-width: 400px;
+    width: 90%;
+    transform: scale(0.9);
+    transition: transform 0.3s;
+}
+
+.modal-overlay.show .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 2px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 i {
+    color: #e74c3c;
+    margin-right: 10px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #7f8c8d;
+}
+
+.modal-body {
+    padding: 30px 20px;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+.modal-footer {
+    padding: 20px;
+    border-top: 2px solid #f0f0f0;
+    display: flex;
+    gap: 10px;
+}
+
+.btn-cancel, .btn-confirm {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-cancel {
+    background: #f8f9fa;
+    color: #7f8c8d;
+}
+
+.btn-confirm {
+    background: #e74c3c;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .admin-email {
+        font-size: 0.8rem;
+        padding: 5px 12px;
+    }
+    
+    .nav-item {
+        padding: 6px 12px;
+        min-width: 60px;
+    }
+    
+    .nav-item i {
+        font-size: 1.1rem;
+    }
+    
+    .nav-item span {
+        font-size: 0.6rem;
+    }
+    
+    .profil-card {
+        padding: 20px;
+    }
+    
+    .profil-avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 2.5rem;
+    }
+}
+
+/* Mode sombre admin */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #1a1e24;
+    }
+    
+    .admin-nav .nav-scroll {
+        background: #2c3e50;
+    }
+    
+    .nav-item {
+        color: #bdc3c7;
+    }
+    
+    .nav-item.active {
+        background: #3498db;
+        color: white;
+    }
+    
+    .profil-card {
+        background: #2c3e50;
+    }
+    
+    .info-group {
+        background: #34495e;
+    }
+    
+    .info-group p {
+        color: #ecf0f1;
+    }
+    
+    .modal-content {
+        background: #2c3e50;
+    }
+}
