@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Market - Catalogue produits</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/produits.css">
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Header avec recherche -->
+    <header class="catalogue-header">
+        <div class="header-container">
+            <a href="admin.html" class="btn-retour">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1></h1>
+            <div class="search-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="search-input" class="search-input" placeholder="Rechercher...">
+            </div>
+        </div>
+    </header>
+
+    <!-- Liste des produits -->
+    <main class="catalogue-main">
+        <div id="produits-liste" class="produits-liste">
+            <!-- Les produits seront injectés ici -->
+        </div>
+    </main>
+
+    <!-- Template pour un produit -->
+    <template id="template-produit">
+        <div class="produit-item" data-produit-id="" data-actif="true">
+            <div class="produit-info">
+                <img src="" alt="" class="produit-image">
+                <div class="produit-details">
+                    <h3 class="produit-nom"></h3>
+                    <div class="produit-meta">
+                        <span class="produit-prix"></span>
+                        <span class="produit-stock"></span>
+                        <span class="produit-categorie"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Toggle activation -->
+            <div class="produit-toggle">
+                <label class="switch">
+                    <input type="checkbox" class="toggle-actif" checked>
+                    <span class="slider round"></span>
+                </label>
+                <span class="toggle-label">Actif</span>
+            </div>
+        </div>
+    </template>
+
+    <script src="js/supabase.js"></script>
+    <script src="js/produits.js"></script>
+</body>
+</html>
