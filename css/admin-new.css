@@ -559,3 +559,314 @@ textarea:focus {
     outline: none;
     border-color: #27ae60;
 }
+/* ========== AMÉLIORATIONS FORMULAIRES ========== */
+
+/* Conteneur du formulaire plus compact */
+.modal-body {
+    padding: 15px 20px;
+}
+
+/* Espacement réduit entre les champs */
+.form-group {
+    margin-bottom: 15px;
+}
+
+/* Labels plus compacts */
+.form-group label {
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    color: #4a5568;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.form-group label i {
+    color: #27ae60;
+    width: 18px;
+    font-size: 0.9rem;
+}
+
+/* Inputs plus compacts */
+.form-group input,
+.form-group select,
+textarea {
+    padding: 10px 14px !important;
+    font-size: 0.95rem !important;
+    border-radius: 12px !important;
+    border: 1.5px solid #e2e8f0 !important;
+    transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+textarea:focus {
+    border-color: #27ae60 !important;
+    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1) !important;
+    outline: none;
+}
+
+/* Row pour prix/stock */
+.form-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.form-group.half {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+/* ========== CADRE IMAGE AMÉLIORÉ ========== */
+
+.image-preview {
+    margin-top: 8px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #f8fafc;
+    border: 2px dashed #cbd5e0;
+    position: relative;
+    aspect-ratio: 16/9;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 14px;
+}
+
+/* Quand pas d'image */
+.image-preview:empty {
+    display: none;
+}
+
+/* Style pour le champ fichier */
+input[type="file"] {
+    padding: 8px !important;
+    background: #f8fafc !important;
+    border-style: dashed !important;
+    cursor: pointer;
+}
+
+input[type="file"]::file-selector-button {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    margin-right: 10px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: #219a52;
+}
+
+/* ========== BOUTONS DU FOOTER MINIMUM ========== */
+
+.modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #edf2f7;
+    display: flex;
+    gap: 10px;
+    background: #f8fafc;
+    border-radius: 0 0 20px 20px;
+}
+
+/* Boutons côte à côte, taille minimum */
+.btn-annuler, 
+.btn-sauvegarder,
+.btn-modifier,
+.btn-supprimer-detail {
+    flex: 1;
+    padding: 10px !important;
+    font-size: 0.9rem !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.btn-annuler {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+.btn-annuler:hover {
+    background: #e2e8f0;
+}
+
+.btn-sauvegarder {
+    background: #27ae60;
+    color: white;
+    border: none;
+    box-shadow: 0 2px 0 #1e8449;
+}
+
+.btn-sauvegarder:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 #1e8449;
+}
+
+/* Boutons du modal détail */
+.btn-modifier {
+    background: #3498db;
+    color: white;
+    border: none;
+    box-shadow: 0 2px 0 #2980b9;
+}
+
+.btn-supprimer-detail {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    box-shadow: 0 2px 0 #c0392b;
+}
+
+/* ========== MODAL PLUS COMPACT ========== */
+
+.modal-content {
+    max-width: 500px;
+    width: 95%;
+}
+
+.modal-header {
+    padding: 15px 20px;
+}
+
+.modal-header h2 {
+    font-size: 1.2rem;
+}
+
+.modal-header h2 i {
+    font-size: 1.1rem;
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    font-size: 1.2rem;
+}
+
+/* ========== AMÉLIORATIONS DÉTAILS PRODUIT ========== */
+
+.detail-scrollable {
+    max-height: 60vh;
+    padding: 15px 20px;
+}
+
+.detail-image {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 16px;
+    margin-bottom: 15px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.detail-info p {
+    margin: 8px 0;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    border: 1px solid #e2e8f0;
+}
+
+.detail-info strong {
+    color: #27ae60;
+    min-width: 100px;
+    display: inline-block;
+    font-size: 0.9rem;
+}
+
+/* ========== RESPONSIVE ========== */
+
+@media (max-width: 480px) {
+    .form-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+    
+    .btn-annuler, 
+    .btn-sauvegarder,
+    .btn-modifier,
+    .btn-supprimer-detail {
+        width: 100%;
+        padding: 12px !important;
+    }
+    
+    .modal-header h2 {
+        font-size: 1.1rem;
+    }
+    
+    .detail-info strong {
+        min-width: 80px;
+    }
+}
+
+/* ========== MODE SOMBRE ========== */
+
+@media (prefers-color-scheme: dark) {
+    .form-group label {
+        color: #cbd5e0;
+    }
+    
+    .form-group input,
+    .form-group select,
+    textarea {
+        background: #2d3748 !important;
+        border-color: #4a5568 !important;
+        color: white !important;
+    }
+    
+    .image-preview {
+        background: #2d3748;
+        border-color: #4a5568;
+    }
+    
+    .modal-footer {
+        background: #2d3748;
+        border-top-color: #4a5568;
+    }
+    
+    .btn-annuler {
+        background: #4a5568;
+        color: #cbd5e0;
+        border-color: #718096;
+    }
+    
+    .btn-annuler:hover {
+        background: #2d3748;
+    }
+    
+    .detail-info p {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    input[type="file"] {
+        background: #2d3748 !important;
+        color: #cbd5e0;
+    }
+    
+    input[type="file"]::file-selector-button {
+        background: #276749;
+    }
+}
