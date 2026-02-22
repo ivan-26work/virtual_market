@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Market - Accueil</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/index.css">
+    <!-- Supabase (AJOUTER CE CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="index-header">
+        <div class="header-container">
+            <img src="images/logo.png" alt="Virtual Market" class="logo">
+            <h1>VIRTUAL MARKET</h1>
+        </div>
+    </header>
+
+    <!-- Contenu principal -->
+    <main class="index-main">
+        <!-- Slogan et description -->
+        <section class="hero-section">
+            <h2>Le marché traditionnel<br>passe au digital</h2>
+            <p class="description">
+                Achetez vos fruits, légumes et produits frais en ligne sur VIRTUAL MARKET. 
+                Faites votre marché depuis chez vous et récupérez vos courses en point relais 
+                ou livrez-les à domicile.
+            </p>
+        </section>
+
+        <!-- Cartes fonctionnalités -->
+        <section class="features-section">
+            <div class="features-grid">
+                <!-- Marcher -->
+                <div class="feature-card" id="card-marcher">
+                    <i class="fas fa-store feature-icon"></i>
+                    <h3>MARCHER</h3>
+                    <p>Achetez vos produits frais</p>
+                    <div class="card-footer">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- Panier -->
+                <div class="feature-card" id="card-panier">
+                    <i class="fas fa-shopping-cart feature-icon"></i>
+                    <h3>PANIER</h3>
+                    <p>Vos achats en cours</p>
+                    <div class="card-footer">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- Mes commandes -->
+                <div class="feature-card" id="card-commandes">
+                    <i class="fas fa-box feature-icon"></i>
+                    <h3>MES COMMANDES</h3>
+                    <p>Suivez vos commandes</p>
+                    <div class="card-footer">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Profil utilisateur (flottant) -->
+        <div id="user-profile" class="user-profile">
+            <!-- Sera injecté par JS -->
+        </div>
+    </main>
+
+
+    <script src="js/index.js"></script>
+    
+    <script src="js/supabase.js"></script>
+    
+</body>
+</html>
