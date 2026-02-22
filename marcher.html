@@ -13,38 +13,87 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <!-- Header simple -->
-    <header class="marcher-header">
+    <!-- Header unique avec tout intégré -->
+    <header class="marcher-header-compact">
         <div class="header-container">
             <a href="index.html" class="btn-retour">
                 <i class="fas fa-arrow-left"></i>
             </a>
-            <h1>LE MARCHÉ</h1>
-            <a href="panier.html" class="panier-icon">
+            
+            <div class="search-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="search-input" class="search-input" placeholder="Rechercher un produit...">
+            </div>
+            
+            <a href="mescommandes.html" class="btn-commandes" title="Mes commandes">
+                <i class="fas fa-box"></i>
+            </a>
+            
+            <a href="panier.html" class="btn-panier" id="panier-link">
                 <i class="fas fa-shopping-cart"></i>
                 <span id="panier-count" class="panier-count">0</span>
             </a>
         </div>
     </header>
 
-    <!-- Grille des produits -->
+    <!-- Liste des catégories avec scroll horizontal -->
     <main class="marcher-main">
-        <div id="produits-grid" class="produits-grid">
-            <!-- Les produits seront injectés ici -->
+        <div id="categories-container" class="categories-container">
+            <!-- Les catégories avec produits seront injectées ici -->
         </div>
     </main>
 
-    <!-- Template produit compact -->
-    <template id="template-produit">
-        <div class="produit-card" data-produit-id="">
-            <img src="" alt="" class="produit-image" loading="lazy">
-            <div class="produit-info">
-                <h3 class="produit-nom"></h3>
-                <p class="produit-prix"></p>
+    <!-- Template pour une catégorie -->
+    <template id="template-categorie">
+        <div class="categorie-section" data-categorie="">
+            <h2 class="categorie-titre"></h2>
+            
+            <div class="produits-scroll">
+                <div class="produits-horizontal" id="produits-{categorie}">
+                    <!-- Les produits de la catégorie -->
+                </div>
             </div>
-            <button class="btn-ajouter" title="Ajouter au panier">
-                <i class="fas fa-plus"></i>
-            </button>
+        </div>
+    </template>
+
+    <!-- Template pour une carte produit simplifiée -->
+    <template id="template-produit">
+        <div class="produit-card-horizontal" data-produit-id="" data-prix="" data-stock="">
+            <!-- Partie 1: Image + description (l'image est cliquable) -->
+            <div class="produit-row image-row">
+                <img src="" alt="" class="produit-image clickable" loading="lazy">
+                <div class="produit-description">
+                    <p class="description-text"></p>
+                </div>
+            </div>
+            
+            <!-- Partie 2: Nom + prix/kg -->
+            <div class="produit-row info-row">
+                <span class="produit-nom"></span>
+                <span class="produit-prix"></span>
+            </div>
+            
+            <!-- Partie 3: Montant modifiable (uniquement) -->
+            <div class="produit-row montant-row">
+                <div class="montant-input-wrapper">
+                    <span class="montant-label">Montant:</span>
+                    <input type="number" class="montant-input" placeholder="F.CFA" min="0" step="50" value="500">
+                    <span class="montant-devise">F</span>
+                </div>
+                <div class="conversion">
+                    <span class="kg-converti">1.67 kg</span>
+                </div>
+            </div>
+            
+            <!-- Partie 4: Bouton ajouter au panier -->
+            <div class="produit-row action-row">
+                <button class="btn-ajouter-panier">
+                    <i class="fas fa-cart-plus"></i> AJOUTER
+                </button>
+            </div>
+            
+            <!-- Bouton × pour reset (en haut à droite) -->
+            <button class="btn-reset" title="Réinitialiser">×</button>
         </div>
     </template>
 
