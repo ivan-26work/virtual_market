@@ -1,0 +1,213 @@
+/* marcher-new.css - Affichage produits depuis Supabase */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+    background: #f5f7fa;
+    min-height: 100vh;
+}
+
+/* Header */
+.marcher-header {
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    padding: 15px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.btn-retour {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2c3e50;
+    text-decoration: none;
+}
+
+.marcher-header h1 {
+    font-size: 1.2rem;
+    color: #2c3e50;
+}
+
+.panier-icon {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2c3e50;
+    text-decoration: none;
+}
+
+.panier-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #e74c3c;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 50%;
+    min-width: 18px;
+}
+
+/* Grille produits */
+.marcher-main {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 15px;
+}
+
+.produits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+/* Carte produit compacte */
+.produit-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    position: relative;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.produit-card:active {
+    transform: scale(0.98);
+}
+
+.produit-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    background: #f8f9fa;
+}
+
+.produit-info {
+    padding: 12px;
+}
+
+.produit-nom {
+    font-size: 0.95rem;
+    color: #2c3e50;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.produit-prix {
+    font-weight: bold;
+    color: #27ae60;
+    font-size: 1rem;
+}
+
+.btn-ajouter {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: #27ae60;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);
+    transition: all 0.2s;
+}
+
+.btn-ajouter:active {
+    transform: scale(0.9);
+}
+
+.btn-ajouter i {
+    font-size: 1rem;
+}
+
+/* État vide */
+.aucun-produit {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 30px;
+}
+
+.aucun-produit i {
+    font-size: 3rem;
+    color: #bdc3c7;
+    margin-bottom: 15px;
+}
+
+.aucun-produit p {
+    color: #7f8c8d;
+}
+
+/* Loading */
+.loading {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .produits-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .produit-image {
+        height: 120px;
+    }
+    
+    .produit-nom {
+        font-size: 0.85rem;
+    }
+    
+    .produit-prix {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .produits-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .btn-ajouter {
+        width: 30px;
+        height: 30px;
+        bottom: 8px;
+        right: 8px;
+    }
+}
