@@ -1,14 +1,18 @@
 // admin-new.js - Gestion produits avec Supabase
-// Utilise window.supabase
+// Version modification directe dans le modal
 
 // Configuration
 const BUCKET_NAME = 'produits';
 
 // État
 let produits = [];
+let produitSelectionne = null;
+let modeEdition = false;
 
 // Éléments DOM
-const modal = document.getElementById('modal-produit');
+const modalAjout = document.getElementById('modal-produit');
+const modalDetail = document.getElementById('modal-detail');
+const modalTitre = document.getElementById('modal-titre');
 const btnAjouter = document.getElementById('btn-ajouter');
 const btnAnnuler = document.getElementById('annuler-produit');
 const btnSauvegarder = document.getElementById('sauvegarder-produit');
@@ -16,27 +20,41 @@ const form = document.getElementById('form-produit');
 const imageInput = document.getElementById('produit-image');
 const imagePreview = document.getElementById('image-preview');
 const grid = document.getElementById('produits-grid');
+const detailBody = document.getElementById('detail-body');
+const btnModifierDetail = document.getElementById('btn-modifier-produit');
+const btnSupprimerDetail = document.getElementById('btn-supprimer-produit');
+
+// Champs du formulaire
+const inputNom = document.getElementById('produit-nom');
+const inputCategorie = document.getElementById('produit-categorie');
+const inputPrix = document.getElementById('produit-prix');
+const inputStock = document.getElementById('produit-stock');
+const inputDescription = document.getElementById('produit-description');
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Admin produits chargé');
     chargerProduits();
     
-    // Événements
-    btnAjouter.addEventListener('click', ouvrirModal);
-    btnAnnuler.addEventListener('click', fermerModal);
-    document.querySelector('.modal-close').addEventListener('click', fermerModal);
+    // Événements modals
+    btnAjouter.addEventListener('click', ouvrirModalAjout);
+    btnAnnuler.addEventListener('click', fermerModalAjout);
+    document.querySelectorAll('.modal-close').forEach(btn => {
+        btn.addEventListener('click', fermerModalAjout);
+    });
+    
+    // Plus de modal détail séparé - on utilise le même modal
     
     // Fermer modal en cliquant sur overlay
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) fermerModal();
+    modalAjout.addEventListener('click', function(e) {
+        if (e.target === modalAjout) fermerModalAjout();
     });
     
     // Preview image
     imageInput.addEventListener('change', previewImage);
     
     // Sauvegarde
-    btnSauvegarder.addEventListener('click', creerProduit);
+    btnSauvegarder.addEventListener('click', sauvegarderProduit);
 });
 
 // Charger tous les produits
@@ -60,7 +78,7 @@ async function chargerProduits() {
     }
 }
 
-// Afficher les produits
+// Afficher les produits en grille compacte
 function afficherProduits() {
     if (produits.length === 0) {
         grid.innerHTML = '<div class="loading">Aucun produit</div>';
@@ -75,11 +93,11 @@ function afficherProduits() {
     });
 }
 
-// Créer une carte produit
+// Créer une carte produit compacte
 function creerCarteProduit(produit) {
     const template = document.getElementById('template-produit');
     const clone = template.content.cloneNode(true);
-    const card = clone.querySelector('.produit-card');
+    const card = clone.querySelector('.produit-card-compact');
     
     card.dataset.produitId = produit.id;
     
@@ -87,28 +105,81 @@ function creerCarteProduit(produit) {
     img.src = produit.image_url;
     img.alt = produit.nom;
     
-    card.querySelector('.produit-nom').textContent = produit.nom;
-    card.querySelector('.produit-prix').textContent = `${produit.prix} F.CFA`;
+    card.querySelector('.produit-nom-compact').textContent = produit.nom;
+    card.querySelector('.produit-prix-compact').textContent = `${produit.prix} F`;
     
-    // Bouton supprimer
-    card.querySelector('.btn-supprimer').addEventListener('click', () => {
-        supprimerProduit(produit.id, produit.image_url);
-    });
+    // Clic sur la carte → ouvrir en mode édition directe
+    card.addEventListener('click', () => editerProduit(produit));
     
     return clone;
 }
 
-// Ouvrir modal
-function ouvrirModal() {
+// Ouvrir un produit en mode édition directe
+function editerProduit(produit) {
+    console.log('Édition produit:', produit);
+    
+    modeEdition = true;
+    produitSelectionne = produit;
+    
+    // Remplir le formulaire
+    inputNom.value = produit.nom || '';
+    inputCategorie.value = produit.categorie || '';
+    inputPrix.value = produit.prix || 0;
+    inputStock.value = produit.stock || 0;
+    inputDescription.value = produit.description || '';
+    
+    // Afficher l'image existante
+    if (produit.image_url) {
+        imagePreview.innerHTML = `<img src="${produit.image_url}" alt="Aperçu">`;
+        imagePreview.style.display = 'block';
+    }
+    
+    // L'image n'est pas obligatoire en édition
+    imageInput.required = false;
+    
+    // Changer le titre et le bouton
+    modalTitre.innerHTML = '<i class="fas fa-edit"></i> Modifier produit';
+    btnSauvegarder.innerHTML = '<i class="fas fa-save"></i> Sauvegarder les modifications';
+    
+    // Stocker l'ID
+    btnSauvegarder.dataset.produitId = produit.id;
+    
+    // Ouvrir le modal
+    modalAjout.classList.add('show');
+}
+
+// Ouvrir modal d'ajout (nouveau produit)
+function ouvrirModalAjout() {
+    console.log('Nouveau produit');
+    
+    modeEdition = false;
+    produitSelectionne = null;
+    
+    // Reset formulaire
     form.reset();
     imagePreview.style.display = 'none';
     imagePreview.innerHTML = '';
-    modal.classList.add('show');
+    imageInput.required = true;
+    
+    // Changer le titre et le bouton
+    modalTitre.innerHTML = '<i class="fas fa-box"></i> Nouveau produit';
+    btnSauvegarder.innerHTML = '<i class="fas fa-save"></i> Créer produit';
+    
+    // Supprimer l'ID
+    delete btnSauvegarder.dataset.produitId;
+    
+    modalAjout.classList.add('show');
 }
 
-// Fermer modal
-function fermerModal() {
-    modal.classList.remove('show');
+// Fermer modal ajout
+function fermerModalAjout() {
+    modalAjout.classList.remove('show');
+    form.reset();
+    imagePreview.style.display = 'none';
+    imagePreview.innerHTML = '';
+    delete btnSauvegarder.dataset.produitId;
+    modeEdition = false;
+    produitSelectionne = null;
 }
 
 // Preview image
@@ -116,14 +187,12 @@ function previewImage(e) {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Vérifier type
     if (!file.type.startsWith('image/')) {
         alert('Veuillez sélectionner une image');
         imageInput.value = '';
         return;
     }
     
-    // Vérifier taille (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
         alert('Image trop volumineuse (max 5MB)');
         imageInput.value = '';
@@ -138,61 +207,114 @@ function previewImage(e) {
     reader.readAsDataURL(file);
 }
 
-// Créer un produit
-async function creerProduit() {
-    const nom = document.getElementById('produit-nom').value.trim();
-    const prix = parseInt(document.getElementById('produit-prix').value);
+// Sauvegarder (création ou modification)
+async function sauvegarderProduit() {
+    const nom = inputNom.value.trim();
+    const categorie = inputCategorie.value;
+    const prix = parseInt(inputPrix.value);
+    const stock = parseInt(inputStock.value) || 0;
+    const description = inputDescription.value.trim();
     const file = imageInput.files[0];
+    const produitId = btnSauvegarder.dataset.produitId;
     
-    if (!nom || !prix || !file) {
-        alert('Tous les champs sont requis');
+    // Validations
+    if (!nom || !categorie || !prix) {
+        alert('Veuillez remplir tous les champs obligatoires');
         return;
     }
     
     btnSauvegarder.disabled = true;
-    btnSauvegarder.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création...';
+    btnSauvegarder.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sauvegarde...';
     
     try {
-        // 1. Upload image vers Supabase Storage
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
-        const filePath = `produits/${fileName}`;
+        let imageUrl = modeEdition ? produitSelectionne?.image_url : '';
         
-        const { data: uploadData, error: uploadError } = await window.supabase.storage
-            .from(BUCKET_NAME)
-            .upload(filePath, file);
+        // Si nouvelle image
+        if (file) {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+            const filePath = `produits/${fileName}`;
+            
+            const { error: uploadError } = await window.supabase.storage
+                .from(BUCKET_NAME)
+                .upload(filePath, file);
+            
+            if (uploadError) throw uploadError;
+            
+            const { data: { publicUrl } } = window.supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(filePath);
+            
+            imageUrl = publicUrl;
+            
+            // Supprimer ancienne image si modification
+            if (modeEdition && produitSelectionne?.image_url) {
+                const oldPath = produitSelectionne.image_url.split('/').pop();
+                await window.supabase.storage
+                    .from(BUCKET_NAME)
+                    .remove([`produits/${oldPath}`]);
+            }
+        }
         
-        if (uploadError) throw uploadError;
+        // Préparer les données
+        const produitData = {
+            nom: nom,
+            categorie: categorie,
+            prix: prix,
+            stock: stock,
+            description: description
+        };
         
-        // 2. Obtenir l'URL publique de l'image
-        const { data: { publicUrl } } = window.supabase.storage
-            .from(BUCKET_NAME)
-            .getPublicUrl(filePath);
+        if (imageUrl) {
+            produitData.image_url = imageUrl;
+        }
         
-        // 3. Créer l'entrée dans la table produits
-        const { data, error } = await window.supabase
-            .from('produits')
-            .insert([
-                {
-                    nom: nom,
-                    prix: prix,
-                    image_url: publicUrl
-                }
-            ])
-            .select();
+        if (modeEdition && produitId) {
+            // MODIFICATION
+            console.log('Modification ID:', produitId);
+            
+            const { error } = await window.supabase
+                .from('produits')
+                .update(produitData)
+                .eq('id', produitId);
+            
+            if (error) throw error;
+            
+            alert('✅ Produit modifié avec succès !');
+            
+        } else {
+            // CRÉATION
+            if (!file) {
+                alert('Une image est requise pour un nouveau produit');
+                btnSauvegarder.disabled = false;
+                btnSauvegarder.innerHTML = '<i class="fas fa-save"></i> Créer produit';
+                return;
+            }
+            
+            produitData.image_url = imageUrl;
+            produitData.created_at = new Date();
+            
+            const { error } = await window.supabase
+                .from('produits')
+                .insert([produitData]);
+            
+            if (error) throw error;
+            
+            alert('✅ Nouveau produit créé !');
+        }
         
-        if (error) throw error;
-        
-        // 4. Recharger la liste
+        // Recharger et fermer
         await chargerProduits();
-        fermerModal();
+        fermerModalAjout();
         
     } catch (error) {
-        console.error('Erreur création:', error);
-        alert('Erreur lors de la création du produit');
+        console.error('Erreur:', error);
+        alert('❌ Erreur: ' + error.message);
     } finally {
         btnSauvegarder.disabled = false;
-        btnSauvegarder.innerHTML = '<i class="fas fa-save"></i> Créer produit';
+        btnSauvegarder.innerHTML = modeEdition ? 
+            '<i class="fas fa-save"></i> Sauvegarder les modifications' : 
+            '<i class="fas fa-save"></i> Créer produit';
     }
 }
 
@@ -201,17 +323,15 @@ async function supprimerProduit(id, imageUrl) {
     if (!confirm('Supprimer ce produit ?')) return;
     
     try {
-        // Extraire le chemin de l'image depuis l'URL
-        const path = imageUrl.split('/').pop();
-        
-        // 1. Supprimer l'image du storage
-        if (path) {
-            await window.supabase.storage
-                .from(BUCKET_NAME)
-                .remove([`produits/${path}`]);
+        if (imageUrl) {
+            const path = imageUrl.split('/').pop();
+            if (path) {
+                await window.supabase.storage
+                    .from(BUCKET_NAME)
+                    .remove([`produits/${path}`]);
+            }
         }
         
-        // 2. Supprimer l'entrée de la table
         const { error } = await window.supabase
             .from('produits')
             .delete()
@@ -219,11 +339,14 @@ async function supprimerProduit(id, imageUrl) {
         
         if (error) throw error;
         
-        // 3. Recharger la liste
         await chargerProduits();
+        alert('✅ Produit supprimé !');
         
     } catch (error) {
         console.error('Erreur suppression:', error);
-        alert('Erreur lors de la suppression');
+        alert('❌ Erreur: ' + error.message);
     }
 }
+
+// Pour supprimer depuis la carte (si besoin)
+window.supprimerProduit = supprimerProduit;
