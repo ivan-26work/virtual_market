@@ -1,5 +1,5 @@
 // admin-new.js - Gestion produits avec Supabase
-// Version modification directe dans le modal
+// Version avec champ actif
 
 // Configuration
 const BUCKET_NAME = 'produits';
@@ -43,9 +43,6 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', fermerModalAjout);
     });
     
-    // Plus de modal détail séparé - on utilise le même modal
-    
-    // Fermer modal en cliquant sur overlay
     modalAjout.addEventListener('click', function(e) {
         if (e.target === modalAjout) fermerModalAjout();
     });
@@ -101,6 +98,11 @@ function creerCarteProduit(produit) {
     
     card.dataset.produitId = produit.id;
     
+    // Si inactif, ajouter classe grisée
+    if (produit.actif === false) {
+        card.classList.add('produit-inactif');
+    }
+    
     const img = card.querySelector('.produit-image');
     img.src = produit.image_url;
     img.alt = produit.nom;
@@ -108,64 +110,56 @@ function creerCarteProduit(produit) {
     card.querySelector('.produit-nom-compact').textContent = produit.nom;
     card.querySelector('.produit-prix-compact').textContent = `${produit.prix} F`;
     
-    // Clic sur la carte → ouvrir en mode édition directe
+    // Ajouter indicateur inactif
+    if (produit.actif === false) {
+        const badge = document.createElement('span');
+        badge.className = 'badge-inactif';
+        badge.textContent = 'INACTIF';
+        card.querySelector('.produit-info-compact').appendChild(badge);
+    }
+    
+    // Clic sur la carte → ouvrir en mode édition
     card.addEventListener('click', () => editerProduit(produit));
     
     return clone;
 }
 
-// Ouvrir un produit en mode édition directe
+// Ouvrir un produit en mode édition
 function editerProduit(produit) {
-    console.log('Édition produit:', produit);
-    
     modeEdition = true;
     produitSelectionne = produit;
     
-    // Remplir le formulaire
     inputNom.value = produit.nom || '';
     inputCategorie.value = produit.categorie || '';
     inputPrix.value = produit.prix || 0;
     inputStock.value = produit.stock || 0;
     inputDescription.value = produit.description || '';
     
-    // Afficher l'image existante
     if (produit.image_url) {
         imagePreview.innerHTML = `<img src="${produit.image_url}" alt="Aperçu">`;
         imagePreview.style.display = 'block';
     }
     
-    // L'image n'est pas obligatoire en édition
     imageInput.required = false;
-    
-    // Changer le titre et le bouton
     modalTitre.innerHTML = '<i class="fas fa-edit"></i> Modifier produit';
-    btnSauvegarder.innerHTML = '<i class="fas fa-save"></i> Sauvegarder les modifications';
-    
-    // Stocker l'ID
+    btnSauvegarder.innerHTML = '<i class="fas fa-save"></i> Sauvegarder';
     btnSauvegarder.dataset.produitId = produit.id;
     
-    // Ouvrir le modal
     modalAjout.classList.add('show');
 }
 
-// Ouvrir modal d'ajout (nouveau produit)
+// Ouvrir modal d'ajout
 function ouvrirModalAjout() {
-    console.log('Nouveau produit');
-    
     modeEdition = false;
     produitSelectionne = null;
     
-    // Reset formulaire
     form.reset();
     imagePreview.style.display = 'none';
     imagePreview.innerHTML = '';
     imageInput.required = true;
     
-    // Changer le titre et le bouton
     modalTitre.innerHTML = '<i class="fas fa-box"></i> Nouveau produit';
     btnSauvegarder.innerHTML = '<i class="fas fa-save"></i> Créer produit';
-    
-    // Supprimer l'ID
     delete btnSauvegarder.dataset.produitId;
     
     modalAjout.classList.add('show');
@@ -217,7 +211,6 @@ async function sauvegarderProduit() {
     const file = imageInput.files[0];
     const produitId = btnSauvegarder.dataset.produitId;
     
-    // Validations
     if (!nom || !categorie || !prix) {
         alert('Veuillez remplir tous les champs obligatoires');
         return;
@@ -229,7 +222,6 @@ async function sauvegarderProduit() {
     try {
         let imageUrl = modeEdition ? produitSelectionne?.image_url : '';
         
-        // Si nouvelle image
         if (file) {
             const fileExt = file.name.split('.').pop();
             const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
@@ -247,7 +239,6 @@ async function sauvegarderProduit() {
             
             imageUrl = publicUrl;
             
-            // Supprimer ancienne image si modification
             if (modeEdition && produitSelectionne?.image_url) {
                 const oldPath = produitSelectionne.image_url.split('/').pop();
                 await window.supabase.storage
@@ -256,7 +247,6 @@ async function sauvegarderProduit() {
             }
         }
         
-        // Préparer les données
         const produitData = {
             nom: nom,
             categorie: categorie,
@@ -265,33 +255,29 @@ async function sauvegarderProduit() {
             description: description
         };
         
-        if (imageUrl) {
-            produitData.image_url = imageUrl;
-        }
+        if (imageUrl) produitData.image_url = imageUrl;
         
         if (modeEdition && produitId) {
             // MODIFICATION
-            console.log('Modification ID:', produitId);
-            
             const { error } = await window.supabase
                 .from('produits')
                 .update(produitData)
                 .eq('id', produitId);
             
             if (error) throw error;
-            
-            alert('✅ Produit modifié avec succès !');
+            alert('✅ Produit modifié !');
             
         } else {
             // CRÉATION
             if (!file) {
-                alert('Une image est requise pour un nouveau produit');
+                alert('Image requise pour un nouveau produit');
                 btnSauvegarder.disabled = false;
                 btnSauvegarder.innerHTML = '<i class="fas fa-save"></i> Créer produit';
                 return;
             }
             
             produitData.image_url = imageUrl;
+            produitData.actif = true; // Par défaut actif
             produitData.created_at = new Date();
             
             const { error } = await window.supabase
@@ -299,11 +285,9 @@ async function sauvegarderProduit() {
                 .insert([produitData]);
             
             if (error) throw error;
-            
             alert('✅ Nouveau produit créé !');
         }
         
-        // Recharger et fermer
         await chargerProduits();
         fermerModalAjout();
         
@@ -313,40 +297,7 @@ async function sauvegarderProduit() {
     } finally {
         btnSauvegarder.disabled = false;
         btnSauvegarder.innerHTML = modeEdition ? 
-            '<i class="fas fa-save"></i> Sauvegarder les modifications' : 
+            '<i class="fas fa-save"></i> Sauvegarder' : 
             '<i class="fas fa-save"></i> Créer produit';
     }
 }
-
-// Supprimer un produit
-async function supprimerProduit(id, imageUrl) {
-    if (!confirm('Supprimer ce produit ?')) return;
-    
-    try {
-        if (imageUrl) {
-            const path = imageUrl.split('/').pop();
-            if (path) {
-                await window.supabase.storage
-                    .from(BUCKET_NAME)
-                    .remove([`produits/${path}`]);
-            }
-        }
-        
-        const { error } = await window.supabase
-            .from('produits')
-            .delete()
-            .eq('id', id);
-        
-        if (error) throw error;
-        
-        await chargerProduits();
-        alert('✅ Produit supprimé !');
-        
-    } catch (error) {
-        console.error('Erreur suppression:', error);
-        alert('❌ Erreur: ' + error.message);
-    }
-}
-
-// Pour supprimer depuis la carte (si besoin)
-window.supprimerProduit = supprimerProduit;
