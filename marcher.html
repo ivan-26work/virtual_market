@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Virtual Market - Marché</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/marcher-new.css">
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Header simple -->
+    <header class="marcher-header">
+        <div class="header-container">
+            <a href="index.html" class="btn-retour">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1>LE MARCHÉ</h1>
+            <a href="panier.html" class="panier-icon">
+                <i class="fas fa-shopping-cart"></i>
+                <span id="panier-count" class="panier-count">0</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Grille des produits -->
+    <main class="marcher-main">
+        <div id="produits-grid" class="produits-grid">
+            <!-- Les produits seront injectés ici -->
+        </div>
+    </main>
+
+    <!-- Template produit compact -->
+    <template id="template-produit">
+        <div class="produit-card" data-produit-id="">
+            <img src="" alt="" class="produit-image" loading="lazy">
+            <div class="produit-info">
+                <h3 class="produit-nom"></h3>
+                <p class="produit-prix"></p>
+            </div>
+            <button class="btn-ajouter" title="Ajouter au panier">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+    </template>
+
+    <script src="js/supabase.js"></script>
+    <script src="js/marcher-new.js"></script>
+</body>
+</html>
