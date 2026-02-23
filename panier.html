@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Virtual Market - Mon Panier</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/panier.css">
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+</head>
+<body>
+    <!-- HEADER FIXE -->
+    <header class="panier-header">
+        <div class="header-container">
+            <a href="marcher.html" class="btn-retour">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1>MON PANIER</h1>
+            <button class="btn-vider" id="btn-vider" title="Vider le panier">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ZONE SCROLLABLE -->
+    <main class="panier-scrollable">
+        <!-- Cadre des produits avec contours verts -->
+        <div class="panier-cadre" id="panier-cadre">
+            <!-- Les produits seront injectés ici -->
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Chargement de votre panier...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER FIXE -->
+    <footer class="panier-footer">
+        <div class="footer-total">
+            <span class="total-label">TOTAL</span>
+            <span class="total-valeur" id="footer-total">0 F</span>
+        </div>
+        <button class="footer-btn" id="btn-commander" disabled>
+            VALIDER LA COMMANDE
+        </button>
+    </footer>
+
+    <!-- ========================================= -->
+    <!-- MODAL 1 - CHOIX PAIEMENT                 -->
+    <!-- ========================================= -->
+    <div id="modal-paiement" class="modal-overlay">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3><i class="fas fa-credit-card"></i> Mode de paiement</h3>
+                <button class="modal-close" id="close-paiement">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="paiement-options">
+                    <div class="paiement-option disabled">
+                        <div class="option-left">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>Mobile Money</span>
+                        </div>
+                        <span class="option-badge">Indisponible</span>
+                    </div>
+                    
+                    <div class="paiement-option active" id="option-local">
+                        <div class="option-left">
+                            <i class="fas fa-store"></i>
+                            <span>Payer à la récupération</span>
+                        </div>
+                        <i class="fas fa-check-circle option-check"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="cancel-paiement">Annuler</button>
+                <button class="btn-confirm" id="suivant-paiement">Suivant →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- MODAL 2 - VALIDATION COMMANDE            -->
+    <!-- ========================================= -->
+    <div id="modal-validation" class="modal-overlay">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h3><i class="fas fa-check-circle"></i> Confirmer ma commande</h3>
+                <button class="modal-close" id="close-validation">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="validation-total">
+                    <span class="total-label">TOTAL À PAYER</span>
+                    <span class="total-valeur" id="validation-total">0 F</span>
+                </div>
+
+                <div class="validation-produits-cadre">
+                    <div class="validation-produits" id="validation-produits"></div>
+                </div>
+
+                <div class="validation-lieu">
+                    <h4><i class="fas fa-map-pin"></i> Lieu de récupération</h4>
+                    <p class="lieu-commune" id="validation-commune">Cocody</p>
+                    <p class="lieu-adresse" id="validation-adresse">Chargement...</p>
+                    <a href="#" id="validation-maps-link" target="_blank" class="maps-link">
+                        <i class="fas fa-map-marked-alt"></i> VOIR SUR GOOGLE MAPS
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="cancel-validation">Annuler</button>
+                <button class="btn-confirm" id="confirm-commande">
+                    <i class="fas fa-check"></i> CONFIRMER
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- MODAL 3 - PLEIN ÉCRAN PRODUIT            -->
+    <!-- ========================================= -->
+    <div id="modal-plein-ecran" class="modal-overlay">
+        <div class="modal-content modal-plein">
+            <div class="modal-header">
+                <h3><i class="fas fa-box"></i> Détail produit</h3>
+                <button class="modal-close" id="close-plein">&times;</button>
+            </div>
+            <div class="modal-body plein-body" id="plein-body">
+                <!-- Contenu injecté par JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- TEMPLATES                                 -->
+    <!-- ========================================= -->
+    
+    <!-- Template article avec boutons et toutes les fonctionnalités -->
+    <template id="template-article">
+        <div class="article-card" data-panier-id="" data-produit-id="" data-prix="" data-stock="" data-quantite="" data-prix-original="">
+            <!-- PARTIE HAUTE: Image cliquable + infos -->
+            <div class="article-header">
+                <img src="" alt="" class="article-image clickable" loading="lazy">
+                <div class="article-infos">
+                    <span class="article-nom"></span>
+                    <div class="article-prix-stock">
+                        <span class="article-prix"></span>
+                        <span class="stock-indic"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- PARTIE BASSE: Contrôles sur UNE SEULE LIGNE -->
+            <div class="article-controls">
+                <button class="btn-moins" title="Diminuer de 0.1 kg">−</button>
+                
+                <div class="quantite-affichage">
+                    <span class="quantite-valeur"></span>
+                    <span class="quantite-unite">kg</span>
+                </div>
+                
+                <button class="btn-plus" title="Augmenter de 0.1 kg">+</button>
+                
+                <button class="btn-supprimer" title="Retirer du panier">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            
+            <!-- MONTANT et ALERTE (si prix changé) -->
+            <div class="article-montant-container">
+                <span class="article-montant"></span>
+                <div class="prix-alerte" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Prix modifié</span>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Template pour ligne produit dans validation -->
+    <template id="template-validation-ligne">
+        <div class="article-validation-ligne">
+            <span class="article-nom"></span>
+            <span class="article-details">
+                <span class="article-kg"></span>
+                <span class="article-montant"></span>
+            </span>
+        </div>
+    </template>
+
+    <script src="js/panier.js"></script>
+</body>
+</html>
