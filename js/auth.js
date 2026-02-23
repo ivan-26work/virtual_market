@@ -1,5 +1,4 @@
-// auth.js - Authentification Supabase avec téléphone et commune
-// Utilise window.supabase (défini dans supabase.js)
+// auth.js - Version complète avec villes et insertion table utilisateurs
 
 // Éléments DOM
 const tabs = {
@@ -30,14 +29,57 @@ document.addEventListener('DOMContentLoaded', function() {
     if (phoneInput) {
         phoneInput.addEventListener('input', validerTelephone);
     }
+    
+    // Remplir la liste des villes (communes + Jacqueville, Bonoua)
+    remplirListeVilles();
 });
+
+// Remplir le select des villes
+function remplirListeVilles() {
+    const select = document.getElementById('register-commune');
+    if (!select) return;
+    
+    const villes = [
+        // Communes d'Abidjan
+        { value: 'Abobo', label: 'Abobo' },
+        { value: 'Adjamé', label: 'Adjamé' },
+        { value: 'Attécoubé', label: 'Attécoubé' },
+        { value: 'Cocody', label: 'Cocody' },
+        { value: 'Koumassi', label: 'Koumassi' },
+        { value: 'Marcory', label: 'Marcory' },
+        { value: 'Plateau', label: 'Plateau' },
+        { value: 'Port-Bouët', label: 'Port-Bouët' },
+        { value: 'Treichville', label: 'Treichville' },
+        { value: 'Yopougon', label: 'Yopougon' },
+        { value: 'Bingerville', label: 'Bingerville' },
+        
+        // ✅ NOUVELLES VILLES AJOUTÉES
+        { value: 'Jacqueville', label: 'Jacqueville' },
+        { value: 'Bonoua', label: 'Bonoua' },
+        
+        // Autres villes (optionnel)
+        { value: 'Grand-Bassam', label: 'Grand-Bassam' },
+        { value: 'Anyama', label: 'Anyama' },
+        { value: 'Dabou', label: 'Dabou' }
+    ];
+    
+    // Trier par ordre alphabétique
+    villes.sort((a, b) => a.label.localeCompare(b.label));
+    
+    select.innerHTML = '<option value="" disabled selected>Choisissez votre localité</option>';
+    villes.forEach(ville => {
+        const option = document.createElement('option');
+        option.value = ville.value;
+        option.textContent = ville.label;
+        select.appendChild(option);
+    });
+}
 
 // Vérifier si déjà connecté
 async function verifierSessionExistante() {
     try {
         const { data: { session } } = await window.supabase.auth.getSession();
         if (session) {
-            // Déjà connecté, rediriger vers accueil
             window.location.href = 'index.html';
         }
     } catch (error) {
@@ -47,15 +89,12 @@ async function verifierSessionExistante() {
 
 // Activer un onglet
 function activerOnglet(onglet) {
-    // Mettre à jour les classes des onglets
     tabs.login.classList.toggle('active', onglet === 'login');
     tabs.register.classList.toggle('active', onglet === 'register');
     
-    // Afficher le formulaire correspondant
     forms.login.classList.toggle('active', onglet === 'login');
     forms.register.classList.toggle('active', onglet === 'register');
     
-    // Cacher les messages
     messageDiv.style.display = 'none';
     messageDiv.className = 'auth-message';
 }
@@ -66,7 +105,6 @@ function showMessage(message, type = 'error') {
     messageDiv.className = `auth-message ${type}`;
     messageDiv.style.display = 'block';
     
-    // Auto-cacher après 5 secondes pour les succès
     if (type === 'success') {
         setTimeout(() => {
             messageDiv.style.display = 'none';
@@ -74,24 +112,20 @@ function showMessage(message, type = 'error') {
     }
 }
 
-// Valider et formater le numéro ivoirien (+225 suivi de 10 chiffres)
+// Valider et formater le numéro ivoirien
 function validerTelephone(e) {
     let phone = e.target.value.replace(/\s+/g, '');
     
-    // Format auto pour +225 suivi de 10 chiffres
     if (phone.length === 14 && phone.startsWith('+225')) {
-        // +225 XX XX XX XX XX
         let formatted = phone.replace(/(\+225)(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5 $6');
         e.target.value = formatted;
     }
 }
 
-// Vérifier que le numéro est un numéro ivoirien valide
+// Vérifier que le numéro est valide
 function estTelephoneValide(phone) {
     const phoneSansEspaces = phone.replace(/\s+/g, '');
-    // +225 suivi de 10 chiffres (peu importe les premiers chiffres : 01, 05, 07, etc.)
     const regexIvoirien = /^\+225\d{10}$/;
-    
     return regexIvoirien.test(phoneSansEspaces);
 }
 
@@ -102,7 +136,6 @@ async function handleLogin(e) {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
     
-    // Désactiver le bouton pendant la requête
     const loginBtn = document.getElementById('login-btn');
     loginBtn.disabled = true;
     loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connexion...';
@@ -122,13 +155,10 @@ async function handleLogin(e) {
         
         if (error) throw error;
         
-        // Connexion réussie
         showMessage('Connexion réussie ! Redirection...', 'success');
         
-        // Sauvegarder email pour affichage
         localStorage.setItem('vm_user_email', email);
         
-        // Rediriger vers l'accueil après 1.5 secondes
         setTimeout(() => {
             window.location.href = 'index.html';
         }, 1500);
@@ -137,13 +167,12 @@ async function handleLogin(e) {
         console.error('Erreur connexion:', error);
         showMessage(error.message || 'Erreur lors de la connexion');
         
-        // Réactiver le bouton
         loginBtn.disabled = false;
         loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Se connecter';
     }
 }
 
-// Gestion de l'inscription
+// Gestion de l'inscription (MISE À JOUR COMPLÈTE)
 async function handleRegister(e) {
     e.preventDefault();
     
@@ -154,7 +183,6 @@ async function handleRegister(e) {
     const password = document.getElementById('register-password').value;
     const confirm = document.getElementById('register-confirm').value;
     
-    // Désactiver le bouton pendant la requête
     const registerBtn = document.getElementById('register-btn');
     registerBtn.disabled = true;
     registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Inscription...';
@@ -168,9 +196,8 @@ async function handleRegister(e) {
             return;
         }
         
-        // Validation du numéro ivoirien (+225 + 10 chiffres)
         if (!estTelephoneValide(phone)) {
-            showMessage('Numéro invalide. Format: +225 suivi de 10 chiffres (ex: +225 01 23 45 67 89)');
+            showMessage('Numéro invalide. Format: +225 suivi de 10 chiffres');
             registerBtn.disabled = false;
             registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> S\'inscrire';
             return;
@@ -190,10 +217,9 @@ async function handleRegister(e) {
             return;
         }
         
-        // Nettoyer le téléphone pour stockage (enlever les espaces)
         const phoneClean = phone.replace(/\s+/g, '');
         
-        // Inscription avec Supabase
+        // Étape 1: Inscription Auth
         const { data, error } = await window.supabase.auth.signUp({
             email: email,
             password: password,
@@ -210,8 +236,25 @@ async function handleRegister(e) {
         if (error) throw error;
         
         if (data.user) {
-            // Inscription réussie - Création du profil automatique
-            showMessage('Inscription réussie ! Création de votre profil...', 'success');
+            // Étape 2: ✅ CRÉATION DANS TABLE utilisateurs
+            const { error: profilError } = await window.supabase
+                .from('utilisateurs')
+                .insert({
+                    id: data.user.id,
+                    nom: name,
+                    telephone: phoneClean,
+                    commune: commune,
+                    commandes_annulees: 0,
+                    created_at: new Date()
+                });
+            
+            if (profilError) {
+                console.error('⚠️ Erreur création profil:', profilError);
+                // Optionnel: notifier mais on continue
+                showMessage('Inscription réussie mais profil incomplet', 'warning');
+            }
+            
+            showMessage('Inscription réussie ! Connexion...', 'success');
             
             // Connexion automatique
             const { error: loginError } = await window.supabase.auth.signInWithPassword({
@@ -225,12 +268,11 @@ async function handleRegister(e) {
                 localStorage.setItem('vm_user_phone', phoneClean);
                 localStorage.setItem('vm_user_commune', commune);
                 
-                // Rediriger vers profil.html pour compléter
+                // Rediriger vers profil avec message bienvenue
                 setTimeout(() => {
                     window.location.href = 'profil.html?new=true';
                 }, 2000);
             } else {
-                // Si erreur connexion automatique, rediriger vers login
                 setTimeout(() => {
                     activerOnglet('login');
                 }, 2000);
@@ -241,13 +283,12 @@ async function handleRegister(e) {
         console.error('Erreur inscription:', error);
         showMessage(error.message || 'Erreur lors de l\'inscription');
         
-        // Réactiver le bouton
         registerBtn.disabled = false;
         registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> S\'inscrire';
     }
 }
 
-// Fonction utilitaire pour le débogage
+// Fonctions utilitaires
 window.getSession = async () => {
     try {
         const { data } = await window.supabase.auth.getSession();
@@ -258,7 +299,6 @@ window.getSession = async () => {
     }
 };
 
-// Fonction de déconnexion (utile pour test)
 window.logout = async () => {
     try {
         await window.supabase.auth.signOut();

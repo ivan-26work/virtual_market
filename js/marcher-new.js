@@ -1,8 +1,7 @@
-// marcher-new.js - Marché avec montant modifiable
+// marcher-new.js - Version avec badge = nombre de produits et cumul des quantités
 
-// Configuration
 let produits = [];
-let panier = [];
+let userId = null;
 
 // Éléments DOM
 const searchInput = document.getElementById('search-input');
@@ -10,16 +9,30 @@ const categoriesContainer = document.getElementById('categories-container');
 const panierCount = document.getElementById('panier-count');
 
 // Initialisation
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('✅ Marché chargé');
-    chargerProduits();
-    chargerPanier();
     
-    // Recherche en temps réel
+    await verifierUtilisateur();
+    await chargerProduits();
+    await mettreAJourCompteur(); // ✅ Compteur mis à jour au chargement
+    
     searchInput.addEventListener('input', filtrerProduits);
 });
 
-// Charger les produits depuis Supabase
+// Vérifier l'utilisateur connecté
+async function verifierUtilisateur() {
+    const { data: { session } } = await window.supabase.auth.getSession();
+    
+    if (!session) {
+        window.location.href = 'auth.html';
+        return;
+    }
+    
+    userId = session.user.id;
+    console.log('👤 Utilisateur:', userId);
+}
+
+// Charger les produits
 async function chargerProduits() {
     try {
         categoriesContainer.innerHTML = '<div class="loading">Chargement...</div>';
@@ -27,6 +40,7 @@ async function chargerProduits() {
         const { data, error } = await window.supabase
             .from('produits')
             .select('*')
+            .eq('actif', true)
             .order('created_at', { ascending: false });
         
         if (error) throw error;
@@ -40,6 +54,170 @@ async function chargerProduits() {
     }
 }
 
+// ✅ NOUVEAU : Mettre à jour le compteur (nombre de produits, pas kg)
+async function mettreAJourCompteur() {
+    try {
+        const { data, error } = await window.supabase
+            .from('panier')
+            .select('produit_id', { count: 'exact', head: false })
+            .eq('user_id', userId);
+        
+        if (error) throw error;
+        
+        // ✅ Compter le nombre de produits UNIQUES
+        const nombreProduits = data?.length || 0;
+        
+        if (panierCount) {
+            panierCount.textContent = nombreProduits;
+            panierCount.style.display = nombreProduits > 0 ? 'flex' : 'none';
+        }
+        
+        console.log('📊 Nombre de produits dans panier:', nombreProduits);
+        
+    } catch (error) {
+        console.error('Erreur compteur:', error);
+    }
+}
+
+// ✅ NOUVEAU : Ajouter au panier avec CUMUL des quantités
+async function ajouterAuPanier(produit, montantSaisi) {
+    if (!userId) {
+        showToast('❌ Vous devez être connecté', 'error');
+        setTimeout(() => window.location.href = 'auth.html', 1500);
+        return;
+    }
+    
+    if (produit.stock <= 0) {
+        showToast('❌ Produit en rupture de stock', 'error');
+        return;
+    }
+    
+    const kg = montantSaisi / produit.prix;
+    
+    if (kg < 1) {
+        showToast('❌ Minimum 1 kg', 'error');
+        return;
+    }
+    
+    if (kg > produit.stock) {
+        showToast(`❌ Stock max: ${produit.stock} kg`, 'error');
+        return;
+    }
+    
+    try {
+        // Animation
+        const btn = event.target;
+        btn.classList.add('add-animation');
+        
+        // ✅ 1. Vérifier si le produit existe déjà dans le panier
+        const { data: existing } = await window.supabase
+            .from('panier')
+            .select('quantite_kg')
+            .eq('user_id', userId)
+            .eq('produit_id', produit.id)
+            .maybeSingle();
+        
+        let nouvelleQuantite = kg;
+        
+        if (existing) {
+            // ✅ 2. Si existe, on CUMULE (addition)
+            nouvelleQuantite = existing.quantite_kg + kg;
+            
+            // ✅ 3. Vérifier que le total ne dépasse pas le stock
+            if (nouvelleQuantite > produit.stock) {
+                showToast(`❌ Stock max: ${produit.stock} kg (déjà ${existing.quantite_kg.toFixed(2)} kg dans panier)`, 'error');
+                btn.classList.remove('add-animation');
+                return;
+            }
+        }
+        
+        // ✅ 4. UPSERT avec la nouvelle quantité cumulée
+        const { error } = await window.supabase
+            .from('panier')
+            .upsert({
+                user_id: userId,
+                produit_id: produit.id,
+                quantite_kg: nouvelleQuantite
+            }, {
+                onConflict: 'user_id, produit_id'
+            });
+        
+        if (error) throw error;
+        
+        // Message selon cumul ou nouvel ajout
+        if (existing) {
+            showToast(`✅ +${kg.toFixed(2)} kg (total: ${nouvelleQuantite.toFixed(2)} kg)`, 'success');
+        } else {
+            showToast(`✅ ${kg.toFixed(2)} kg ajoutés`, 'success');
+        }
+        
+        // ✅ 5. Mettre à jour le compteur (nombre de produits)
+        await mettreAJourCompteur();
+        
+        // Reset du champ
+        const card = document.querySelector(`[data-produit-id="${produit.id}"]`);
+        if (card) {
+            const input = card.querySelector('.montant-input');
+            input.value = produit.prix;
+            const kgEl = card.querySelector('.kg-converti');
+            kgEl.textContent = '1.00 kg';
+        }
+        
+        setTimeout(() => btn.classList.remove('add-animation'), 300);
+        
+    } catch (error) {
+        console.error('Erreur ajout panier:', error);
+        showToast('❌ Erreur lors de l\'ajout', 'error');
+    }
+}
+
+// Retirer une quantité spécifique (optionnel, pour bouton "retirer" si besoin)
+async function retirerDuPanier(produitId, kgARetirer) {
+    try {
+        const { data: existing } = await window.supabase
+            .from('panier')
+            .select('quantite_kg')
+            .eq('user_id', userId)
+            .eq('produit_id', produitId)
+            .single();
+        
+        if (!existing) {
+            showToast('❌ Produit pas dans le panier', 'error');
+            return;
+        }
+        
+        const nouvelleQuantite = existing.quantite_kg - kgARetirer;
+        
+        if (nouvelleQuantite <= 0) {
+            // Supprimer complètement
+            await window.supabase
+                .from('panier')
+                .delete()
+                .eq('user_id', userId)
+                .eq('produit_id', produitId);
+            
+            showToast('🗑️ Produit retiré du panier', 'success');
+        } else {
+            // Mettre à jour
+            await window.supabase
+                .from('panier')
+                .update({ quantite_kg: nouvelleQuantite })
+                .eq('user_id', userId)
+                .eq('produit_id', produitId);
+            
+            showToast(`✅ ${kgARetirer.toFixed(2)} kg retirés`, 'success');
+        }
+        
+        await mettreAJourCompteur();
+        
+    } catch (error) {
+        console.error('Erreur retrait:', error);
+        showToast('❌ Erreur lors du retrait', 'error');
+    }
+}
+
+// ========== Fonctions existantes (inchangées) ==========
+
 // Afficher les produits groupés par catégorie
 function afficherProduitsParCategorie() {
     if (produits.length === 0) {
@@ -47,7 +225,6 @@ function afficherProduitsParCategorie() {
         return;
     }
     
-    // Grouper par catégorie
     const categories = {};
     produits.forEach(produit => {
         const cat = produit.categorie || 'Autres';
@@ -57,33 +234,29 @@ function afficherProduitsParCategorie() {
     
     categoriesContainer.innerHTML = '';
     
-    // Afficher chaque catégorie
     for (const [categorie, produitsCat] of Object.entries(categories)) {
         const section = creerSectionCategorie(categorie, produitsCat);
         categoriesContainer.appendChild(section);
     }
 }
 
-// Créer une section de catégorie avec scroll horizontal
+// Créer une section de catégorie
 function creerSectionCategorie(categorie, produitsCat) {
     const section = document.createElement('div');
     section.className = 'categorie-section';
     section.dataset.categorie = categorie;
     
-    // Titre de catégorie
     const titre = document.createElement('h2');
     titre.className = 'categorie-titre';
     titre.textContent = categorie;
     section.appendChild(titre);
     
-    // Conteneur scroll horizontal
     const scrollDiv = document.createElement('div');
     scrollDiv.className = 'produits-scroll';
     
     const produitsDiv = document.createElement('div');
     produitsDiv.className = 'produits-horizontal';
     
-    // Ajouter chaque produit
     produitsCat.forEach(produit => {
         const card = creerCarteProduit(produit);
         produitsDiv.appendChild(card);
@@ -95,7 +268,7 @@ function creerSectionCategorie(categorie, produitsCat) {
     return section;
 }
 
-// Créer une carte produit (version simplifiée)
+// Créer une carte produit
 function creerCarteProduit(produit) {
     const template = document.getElementById('template-produit');
     const clone = template.content.cloneNode(true);
@@ -105,14 +278,12 @@ function creerCarteProduit(produit) {
     card.dataset.prix = produit.prix;
     card.dataset.stock = produit.stock || 0;
     
-    // Gestion rupture de stock
     if (produit.stock <= 0) {
         card.classList.add('rupture-stock');
     } else if (produit.stock < 5) {
         card.classList.add('stock-faible');
     }
     
-    // Image + clic pour plein écran
     const img = card.querySelector('.produit-image');
     img.src = produit.image_url;
     img.alt = produit.nom;
@@ -121,83 +292,65 @@ function creerCarteProduit(produit) {
         ouvrirPleinEcran(produit);
     });
     
-    // Description
     card.querySelector('.description-text').textContent = 
         produit.description || 'Aucune description';
     
-    // Nom
     card.querySelector('.produit-nom').textContent = produit.nom;
-    
-    // Prix/kg
     card.querySelector('.produit-prix').textContent = `${produit.prix} F/kg`;
     
-    // Montant input
     const montantInput = card.querySelector('.montant-input');
     const kgConverti = card.querySelector('.kg-converti');
     
-    // Calcul initial
+    montantInput.value = produit.prix;
     updateKgFromMontant(montantInput, kgConverti, produit.prix);
     
-    // Événement sur le montant
     montantInput.addEventListener('input', () => {
         updateKgFromMontant(montantInput, kgConverti, produit.prix);
     });
     
-    // Bouton reset
     const resetBtn = card.querySelector('.btn-reset');
     resetBtn.addEventListener('click', () => {
-        montantInput.value = produit.prix; // 1 kg par défaut
+        montantInput.value = produit.prix;
         updateKgFromMontant(montantInput, kgConverti, produit.prix);
     });
     
-    // Bouton ajouter au panier
     const ajouterBtn = card.querySelector('.btn-ajouter-panier');
     ajouterBtn.addEventListener('click', () => {
-        ajouterAuPanier(produit, montantInput.value);
+        ajouterAuPanier(produit, parseFloat(montantInput.value));
     });
     
     return clone;
 }
 
-// Calculer kg à partir du montant
 function updateKgFromMontant(montantInput, kgElement, prix) {
     const montant = parseFloat(montantInput.value) || 0;
     const kg = montant / prix;
     kgElement.textContent = kg.toFixed(2) + ' kg';
 }
 
-// Ouvrir modal plein écran (clic sur image)
 function ouvrirPleinEcran(produit) {
-    // Créer modal
     const modal = document.createElement('div');
     modal.className = 'modal-plein-ecran';
     
     modal.innerHTML = `
         <div class="modal-content-plein">
             <button class="modal-fermer">&times;</button>
-            
             <img src="${produit.image_url}" alt="${produit.nom}" class="modal-image">
-            
             <div class="modal-infos">
                 <h2>${produit.nom}</h2>
                 <p class="modal-categorie">${produit.categorie || 'Non catégorisé'}</p>
                 <p class="modal-description">${produit.description || 'Aucune description'}</p>
-                
                 <div class="modal-details">
                     <div><strong>Prix:</strong> ${produit.prix} F/kg</div>
                     <div><strong>Stock:</strong> ${produit.stock || 0} kg</div>
-                    <div><strong>Ajouté le:</strong> ${new Date(produit.created_at).toLocaleDateString('fr-FR')}</div>
                 </div>
             </div>
         </div>
     `;
     
     document.body.appendChild(modal);
-    
-    // Animation
     setTimeout(() => modal.classList.add('show'), 10);
     
-    // Fermeture
     const fermer = () => {
         modal.classList.remove('show');
         setTimeout(() => modal.remove(), 300);
@@ -209,99 +362,6 @@ function ouvrirPleinEcran(produit) {
     });
 }
 
-// Ajouter au panier
-function ajouterAuPanier(produit, montantSaisi) {
-    if (produit.stock <= 0) {
-        showToast('❌ Produit en rupture de stock', 'error');
-        return;
-    }
-    
-    const montant = parseFloat(montantSaisi) || 0;
-    const kg = montant / produit.prix;
-    
-    // Validation
-    if (kg < 1) {
-        showToast('❌ Montant insuffisant (minimum 1 kg)', 'error');
-        // Reset à 1 kg
-        const montantMin = produit.prix;
-        const card = document.querySelector(`[data-produit-id="${produit.id}"]`);
-        if (card) {
-            const input = card.querySelector('.montant-input');
-            input.value = montantMin;
-            const kgEl = card.querySelector('.kg-converti');
-            kgEl.textContent = '1.00 kg';
-        }
-        return;
-    }
-    
-    if (kg > produit.stock) {
-        showToast(`❌ Stock insuffisant (max ${produit.stock} kg)`, 'error');
-        // Reset à stock max
-        const montantMax = produit.prix * produit.stock;
-        const card = document.querySelector(`[data-produit-id="${produit.id}"]`);
-        if (card) {
-            const input = card.querySelector('.montant-input');
-            input.value = montantMax;
-            const kgEl = card.querySelector('.kg-converti');
-            kgEl.textContent = produit.stock.toFixed(2) + ' kg';
-        }
-        return;
-    }
-    
-    // Ajouter au panier
-    const existant = panier.find(item => item.id === produit.id);
-    
-    if (existant) {
-        existant.kg += kg;
-    } else {
-        panier.push({
-            id: produit.id,
-            nom: produit.nom,
-            prix: produit.prix,
-            image: produit.image_url,
-            kg: kg
-        });
-    }
-    
-    localStorage.setItem('vm_panier', JSON.stringify(panier));
-    
-    // Animation
-    const btn = event.target;
-    btn.classList.add('add-animation');
-    setTimeout(() => btn.classList.remove('add-animation'), 300);
-    
-    showToast(`✅ ${kg.toFixed(2)} kg ajoutés au panier`, 'success');
-    mettreAJourCompteur();
-    
-    // Reset du champ
-    const card = document.querySelector(`[data-produit-id="${produit.id}"]`);
-    if (card) {
-        const input = card.querySelector('.montant-input');
-        input.value = produit.prix;
-        const kgEl = card.querySelector('.kg-converti');
-        kgEl.textContent = '1.00 kg';
-    }
-}
-
-// Charger panier
-function chargerPanier() {
-    const saved = localStorage.getItem('vm_panier');
-    if (saved) {
-        panier = JSON.parse(saved);
-    }
-    mettreAJourCompteur();
-}
-
-// Mettre à jour compteur panier
-function mettreAJourCompteur() {
-    const total = panier.reduce((acc, item) => acc + (item.kg || 1), 0);
-    if (panierCount) {
-        panierCount.textContent = total;
-        panierCount.style.display = total > 0 ? 'flex' : 'none';
-    }
-}
-
-// Filtrer les produits par recherche
 function filtrerProduits() {
     const searchTerm = searchInput.value.toLowerCase().trim();
     
@@ -321,7 +381,6 @@ function filtrerProduits() {
         return;
     }
     
-    // Afficher les résultats sans catégories
     const categories = {};
     filtered.forEach(produit => {
         const cat = produit.categorie || 'Résultats';
@@ -337,7 +396,6 @@ function filtrerProduits() {
     }
 }
 
-// Toast notifications
 function showToast(message, type = 'info') {
     let toast = document.getElementById('marcher-toast');
     if (!toast) {
